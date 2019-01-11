@@ -40,13 +40,12 @@ type Organization struct {
 }
 
 var (
-	rowNum    = 1
-	checked   = 0
-	unchecked = 0
-	lines     = 0
-	complete  = 0
-	active    = 0
-	//columnTo       = flag.String("output", "U", "column letter") // for .xlsx (deprecated)
+	rowNum         = 1
+	checked        = 0
+	unchecked      = 0
+	lines          = 0
+	complete       = 0
+	active         = 0
 	timeoutSeconds = flag.Int("timeout", 20, "getting http data timeout")
 	siteColumn     = flag.Int("site", 9, "number of column with site domain")
 	toCsv          = flag.Bool("csv", false, "save data to .csv")
@@ -106,23 +105,28 @@ func main() {
 	}
 	fmt.Println("File opened, loading rows...")
 
+	var completedSites = make(map[string]bool)
+
 	// Get all the rows in the Sheet1.
-	//sheet := xlsxFile.Sheets[0]
+	sheet := xlsxFile.Sheets[0]
 	fmt.Println("Rows loaded, checking...")
-	for i := 0; i < len(xlsxFile.Sheets[0].Rows); i++ {
-		if len(xlsxFile.Sheets[0].Rows[i].Cells) > *siteColumn {
-			if xlsxFile.Sheets[0].Rows[i].Cells[*siteColumn].String() != "" {
-				if active < *routinesCount {
-					go Check(*xlsxFile.Sheets[0].Rows[i], rowNum, lines)
-					lines++
-					active++
-				} else {
-					for active >= *routinesCount {
-						time.Sleep(time.Second)
+	for i := 0; i < len(sheet.Rows); i++ {
+		if len(sheet.Rows[i].Cells) > *siteColumn {
+			if sheet.Rows[i].Cells[*siteColumn].String() != "" {
+				if completedSites[sheet.Rows[i].Cells[*siteColumn].String()] != true {
+					if active < *routinesCount {
+						go Check(*sheet.Rows[i], rowNum, lines)
+						lines++
+						active++
+					} else {
+						for active >= *routinesCount {
+							time.Sleep(time.Second)
+						}
+						go Check(*sheet.Rows[i], rowNum, lines)
+						lines++
+						active++
 					}
-					go Check(*xlsxFile.Sheets[0].Rows[i], rowNum, lines)
-					lines++
-					active++
+					completedSites[sheet.Rows[i].Cells[*siteColumn].String()] = true
 				}
 			} else {
 				unchecked++
@@ -173,6 +177,7 @@ func main() {
 		timeFrom.Year(), timeFrom.Month(), timeFrom.Day(),
 		timeFrom.Hour(), timeFrom.Minute(), timeFrom.Second())
 
+	// Saving results
 	if *toCsv {
 		fmt.Println("Saving to .csv")
 		file, err := os.Create(newFileName + ".csv")
