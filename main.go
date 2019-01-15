@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
-	"github.com/tealeg/xlsx"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -12,6 +11,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/tealeg/xlsx"
 )
 
 // Organization main data structure
@@ -88,16 +89,10 @@ func (o *OrgContainer) Map() *map[int]Organization {
 func main() {
 	timeFrom := time.Now()
 	fileName := flag.String("file", "./Book.xlsx", ".xlsx file path")
-	//sheetName := flag.String("sheet", "Sheet1", "excel sheet name")
 	routinesCount := flag.Int("routines", 100, "count of Go routines")
 	flag.Parse()
 
 	fmt.Println("Opening file...")
-	//xlsx, err := excelize.OpenFile(*fileName)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
 	xlsxFile, err := xlsx.OpenFile(*fileName)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -161,6 +156,7 @@ func main() {
 			org.Get(k).Fax,
 			org.Get(k).Site,
 			org.Get(k).ICQ,
+			org.Get(k).Jabber,
 			org.Get(k).Skype,
 			org.Get(k).Vkontakte,
 			org.Get(k).Facebook,

@@ -10,8 +10,7 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-Book*.xlsx
-CheckResult*
-2gisBitrixChecker.exe
+*.xlsx
+*.csv
 
 .idea
