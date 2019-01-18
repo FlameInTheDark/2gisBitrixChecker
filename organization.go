@@ -25,6 +25,7 @@ type Organization struct {
 	Photo         string `xlsx:"18"`
 	UploadedPhoto string `xlsx:"19"`
 	Bitrix        string `xlsx:"20"`
+	ToSave        bool   `xlsx:"-"`
 }
 
 // OrgContainer data container for concurrency
@@ -58,4 +59,27 @@ func (o *OrgContainer) Len() int {
 // Map returns pointer to map in OrgContainer
 func (o *OrgContainer) Map() *map[int]Organization {
 	return &o.m
+}
+
+type Company struct {
+	Title        string  `json:"TITLE"`
+	CompanyType  string  `json:"COMPANY_TYPE"`
+	Opened       string  `json:"OPENED"`
+	AssignedByID string  `json:"ASSIGNED_BY_ID"`
+	Phone        []Phone `json:"PHONE"`
+	Site         []Site  `json:"WEB"`
+}
+
+type Phone struct {
+	Value     string `json:"VALUE"`
+	ValueType string `json:"VALUE_TYPE"`
+}
+
+type Site struct {
+	Value     string `json:"VALUE"`
+	ValueType string `json:"VALUE_TYPE"`
+}
+
+type Fields struct {
+	Fields Company `json:"fields"`
 }

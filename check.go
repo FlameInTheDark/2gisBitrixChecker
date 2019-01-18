@@ -37,13 +37,18 @@ func Check(row xlsx.Row, rowNum, line int) {
 				bodyString := string(bodyBytes)
 				if strings.Contains(bodyString, "sale") {
 					newOrg.Bitrix = "Битрикс, Малый бизнес / Бизнес"
+					newOrg.ToSave = true
+					bitrixes++
 				} else if strings.Contains(bodyString, "bitrix") {
 					newOrg.Bitrix = "Битрикс, не магазин"
+					newOrg.ToSave = true
+					bitrixes++
 				} else {
 					newOrg.Bitrix = "Не Битрикс, открывается"
+
 				}
 			} else {
-				newOrg.Bitrix = "Не Битрикс"
+				newOrg.Bitrix = "Не Битрикс, открывается"
 			}
 		} else {
 			newOrg.Bitrix = "Не Битрикс"
@@ -54,6 +59,21 @@ func Check(row xlsx.Row, rowNum, line int) {
 	org.Store(rowNum, *newOrg)
 	checked++
 	complete++
-	fmt.Printf("[%v:%v] Result of: %v is [%v]\n", complete, line, newOrg.Site, newOrg.Bitrix)
+	//fmt.Printf("\r[%v:%v] Result of: %v is [%v]\t\t\t\t\t", complete, line, newOrg.Site, newOrg.Bitrix)
 	active--
+}
+
+func Percentage() {
+	fmt.Println("Rows loaded, checking...")
+	sc := 0
+	for complete < count {
+		per := int((float64(complete ) / float64(count)) * 100)
+		for i := 0; i < sc; i++ {
+			fmt.Print("\b")
+		}
+		str := fmt.Sprintf("Complete: %v%% | %v\\%v", per, complete, count)
+		sc = len(str)
+		fmt.Print(str)
+		time.Sleep(1 * time.Second)
+	}
 }

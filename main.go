@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"sort"
 	"time"
 
@@ -16,10 +17,14 @@ var (
 	lines          = 0
 	complete       = 0
 	active         = 0
+	count          = 0
+	bitrixes       = 0
 	timeoutSeconds = flag.Int("timeout", 20, "getting http data timeout")
 	siteColumn     = flag.Int("site", 9, "number of column with site domain")
 	toCsv          = flag.Bool("csv", false, "save data to .csv")
+	toXlsx         = flag.Bool("xlsx", false, "save data to .xlsx")
 	org            = MakeContainer()
+	bxConn         = os.Getenv("BX_CONN")
 )
 
 func main() {
@@ -46,7 +51,8 @@ func main() {
 
 	// Get all the rows in the Sheet1.
 	sheet := xlsxFile.Sheets[0]
-	fmt.Println("Rows loaded, checking...")
+	count = len(sheet.Rows)
+	go Percentage()
 	for i := 0; i < len(sheet.Rows); i++ {
 		if len(sheet.Rows[i].Cells) > *siteColumn {
 			if sheet.Rows[i].Cells[*siteColumn].String() != "" {
@@ -64,10 +70,15 @@ func main() {
 						active++
 					}
 					completedSites[sheet.Rows[i].Cells[*siteColumn].String()] = true
+				} else {
+					complete++
 				}
 			} else {
+				complete++
 				unchecked++
 			}
+		} else {
+			complete++
 		}
 		rowNum++
 	}
@@ -76,7 +87,7 @@ func main() {
 		time.Sleep(time.Second)
 	}
 
-	fmt.Println("Checked, saving...")
+	fmt.Println("\nChecked, saving...")
 	keys := make([]int, 0, org.Len())
 	for k := range *org.Map() {
 		keys = append(keys, k)
@@ -122,7 +133,8 @@ func main() {
 			fmt.Println(saveErr.Error())
 			return
 		}
-	} else {
+	}
+	if *toXlsx {
 		saveErr := SaveToXlsx(&csvData, newFileName+".xlsx")
 		if saveErr != nil {
 			fmt.Println(saveErr.Error())
@@ -130,7 +142,13 @@ func main() {
 		}
 	}
 
+	if *toCsv || *toXlsx {
+		fmt.Println("Saved to file! Saving to CRM...")
+	}
+
+	SaveCRM()
+
 	fmt.Println("Saved!")
-	fmt.Printf("Time: %v\nThreads: %v\nRows: %v\nChecked: %v\nUnchecked: %v",
-		time.Since(timeFrom), *routinesCount, rowNum, checked, unchecked)
+	fmt.Printf("Time: %v\nThreads: %v\nRows: %v\nChecked: %v\nUnchecked: %v\nBitrixes: %v",
+		time.Since(timeFrom), *routinesCount, rowNum, checked, unchecked, bitrixes)
 }
