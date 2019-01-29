@@ -68,6 +68,8 @@ type Company struct {
 	AssignedByID string  `json:"ASSIGNED_BY_ID"`
 	Phone        []Phone `json:"PHONE"`
 	Site         []Site  `json:"WEB"`
+	Emails       []Email `json:"EMAIL"`
+	From         string  `json:"UF_CRM_1548763245"`
 }
 
 type Phone struct {
@@ -76,6 +78,11 @@ type Phone struct {
 }
 
 type Site struct {
+	Value     string `json:"VALUE"`
+	ValueType string `json:"VALUE_TYPE"`
+}
+
+type Email struct {
 	Value     string `json:"VALUE"`
 	ValueType string `json:"VALUE_TYPE"`
 }

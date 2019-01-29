@@ -71,7 +71,7 @@ func Percentage() {
 		for i := 0; i < sc; i++ {
 			fmt.Print("\b")
 		}
-		str := fmt.Sprintf("Complete: %v%% | %v\\%v", per, complete, count)
+		str := fmt.Sprintf("Complete: %v%% | %v\\%v | Bitrixes: %v", per, complete, count, bitrixes)
 		sc = len(str)
 		fmt.Print(str)
 		time.Sleep(1 * time.Second)
