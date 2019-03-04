@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/tealeg/xlsx"
@@ -86,7 +87,7 @@ func main() {
 	for active > 0 {
 		time.Sleep(time.Second)
 	}
-
+	time.Sleep(2 * time.Second)
 	fmt.Println("\nChecked, saving...")
 	keys := make([]int, 0, org.Len())
 	for k := range *org.Map() {
@@ -146,9 +147,21 @@ func main() {
 		fmt.Println("Saved to file! Saving to CRM...")
 	}
 
+	// Saving results to CRM
 	SaveCRM()
 
 	fmt.Println("Saved!")
 	fmt.Printf("Time: %v\nThreads: %v\nRows: %v\nChecked: %v\nUnchecked: %v\nBitrixes: %v",
 		time.Since(timeFrom), *routinesCount, rowNum, checked, unchecked, bitrixes)
+}
+
+// trimDomain removes www. from domain name
+func trimDomain(domain string) string {
+	var trimmed string
+	if strings.Contains(domain, "www") {
+		trimmed = strings.Split(domain, "www.")[1]
+	} else {
+		trimmed = domain
+	}
+	return trimmed
 }

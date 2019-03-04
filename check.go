@@ -59,10 +59,10 @@ func Check(row xlsx.Row, rowNum, line int) {
 	org.Store(rowNum, *newOrg)
 	checked++
 	complete++
-	//fmt.Printf("\r[%v:%v] Result of: %v is [%v]\t\t\t\t\t", complete, line, newOrg.Site, newOrg.Bitrix)
 	active--
 }
 
+// Percentage shows percentage of progress in console
 func Percentage() {
 	fmt.Println("Rows loaded, checking...")
 	sc := 0
@@ -71,9 +71,9 @@ func Percentage() {
 		for i := 0; i < sc; i++ {
 			fmt.Print("\b")
 		}
-		str := fmt.Sprintf("Complete: %v%% | %v\\%v | Bitrixes: %v", per, complete, count, bitrixes)
+		str := fmt.Sprintf("Complete: %v%% | %v\\%v | Bitrixes: %v   ", per, complete, count, bitrixes)
 		sc = len(str)
 		fmt.Print(str)
-		time.Sleep(1 * time.Second)
+		time.Sleep(time.Second)
 	}
 }

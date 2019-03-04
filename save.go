@@ -73,23 +73,25 @@ type ReturnResultList struct {
 // SaveCRM saves checked data in CRM
 func SaveCRM() {
 	var results = make(map[string]ReturnableCompany)
+	// Getting companies from CRM
 	v := GetCompanies(0)
 	for _, val := range v.Result {
 		if len(val.Sites) != 0 {
-			results[val.Sites[0].Value] = val
+			results[trimDomain(val.Sites[0].Value)] = val
 		}
 	}
 	for v.Next != 0 {
 		for _, val := range v.Result {
 			if len(val.Sites) != 0 {
-				results[val.Sites[0].Value] = val
+				results[trimDomain(val.Sites[0].Value)] = val
 			}
 		}
 		v = GetCompanies(v.Next)
 	}
 	created := 0
 	for _, v := range *org.Map() {
-		if _, ok := results[v.Site]; !ok && v.ToSave {
+		// Checking companies and creating new if company not exists
+		if _, ok := results[trimDomain(v.Site)]; !ok && v.ToSave {
 			CreateCompany(&v)
 			created++
 		}
