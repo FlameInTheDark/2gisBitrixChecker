@@ -42,7 +42,6 @@ func SaveToCsv(csvData *[][]string, filePath string) error {
 	if fileErr != nil {
 		return fileErr
 	}
-	defer file.Close()
 
 	writer := csv.NewWriter(file)
 	writer.Comma = '\t'
@@ -54,6 +53,7 @@ func SaveToCsv(csvData *[][]string, filePath string) error {
 			return writeErr
 		}
 	}
+	_=file.Close()
 	return nil
 }
 
@@ -137,7 +137,7 @@ func CreateCompany(org *Organization) {
 	orgEmails := strings.Split(org.Email, ",")
 
 	for _, v := range orgPhones {
-		phones = append(phones, Phone{v, "WORK"})
+		phones = append(phones, Phone{trimPhone(v), "WORK"})
 	}
 	for _, v := range orgEmails {
 		emails = append(emails, Email{v, "WORK"})
@@ -149,16 +149,26 @@ func CreateCompany(org *Organization) {
 		sites = append(sites, Site{v, "WORK"})
 	}
 
+	// TODO: change to existing ids
+	var license = make(map[string]string)
+	var bxtype = make(map[string]string)
+	license["bitrix"] = "485"
+	license["sale"] = "487"
+	bxtype["bitrix"] = "507"
+	bxtype["sale"] = "511"
+
 	// Company fields for request
 	newFields := Company{
 		org.Name,
 		"CUSTOMER",
 		"Y",
-		"1",
+		"147",
 		phones,
 		sites,
 		emails,
-		"119",
+		"447",
+		[]string{"471"},
+		[]string{license[org.Bitrix], bxtype[org.Bitrix]},
 	}
 
 	f, _ := json.Marshal(Fields{newFields})

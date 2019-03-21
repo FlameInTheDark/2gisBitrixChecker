@@ -158,10 +158,26 @@ func main() {
 // trimDomain removes www. from domain name
 func trimDomain(domain string) string {
 	var trimmed string
-	if strings.Contains(domain, "www") {
-		trimmed = strings.Split(domain, "www.")[1]
+	if strings.Contains(domain, "www.") {
+		split := strings.Split(domain, "www.")
+		if len(split) > 1 {
+			trimmed = split[1]
+		} else {
+			trimmed = domain
+		}
 	} else {
 		trimmed = domain
 	}
+	return trimmed
+}
+
+// trimPhone removes "+7", "(", ")", "-" symbols
+func trimPhone(phone string) string {
+	var trimmed string
+	trimmed = strings.Replace(phone, "(", "", -1)
+	trimmed = strings.Replace(trimmed, ")", "", -1)
+	trimmed = strings.Replace(trimmed, "-", "", -1)
+	trimmed = strings.Replace(trimmed, " ", "", -1)
+	trimmed = strings.Replace(trimmed, "+7", "8", 1)
 	return trimmed
 }

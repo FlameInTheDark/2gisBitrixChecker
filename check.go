@@ -36,11 +36,11 @@ func Check(row xlsx.Row, rowNum, line int) {
 			if err2 == nil {
 				bodyString := string(bodyBytes)
 				if strings.Contains(bodyString, "sale") {
-					newOrg.Bitrix = "Битрикс, Малый бизнес / Бизнес"
+					newOrg.Bitrix = "sale"
 					newOrg.ToSave = true
 					bitrixes++
 				} else if strings.Contains(bodyString, "bitrix") {
-					newOrg.Bitrix = "Битрикс, не магазин"
+					newOrg.Bitrix = "bitrix"
 					newOrg.ToSave = true
 					bitrixes++
 				} else {

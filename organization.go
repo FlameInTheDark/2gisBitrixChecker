@@ -62,14 +62,16 @@ func (o *OrgContainer) Map() *map[int]Organization {
 }
 
 type Company struct {
-	Title        string  `json:"TITLE"`
-	CompanyType  string  `json:"COMPANY_TYPE"`
-	Opened       string  `json:"OPENED"`
-	AssignedByID string  `json:"ASSIGNED_BY_ID"`
-	Phone        []Phone `json:"PHONE"`
-	Site         []Site  `json:"WEB"`
-	Emails       []Email `json:"EMAIL"`
-	From         string  `json:"UF_CRM_1548763245"`
+	Title        string   `json:"TITLE"`
+	CompanyType  string   `json:"COMPANY_TYPE"`
+	Opened       string   `json:"OPENED"`
+	AssignedByID string   `json:"ASSIGNED_BY_ID"`
+	Phone        []Phone  `json:"PHONE"`
+	Site         []Site   `json:"WEB"`
+	Emails       []Email  `json:"EMAIL"`
+	From         string   `json:"UF_CRM_5AF5A321D405E"`
+	Country      []string `json:"UF_CRM_1551766188"`
+	License      []string `json:"UF_CRM_1551766310"`
 }
 
 type Phone struct {
