@@ -31,23 +31,23 @@ type Organization struct {
 // OrgContainer data container for concurrency
 type OrgContainer struct {
 	mx sync.Mutex
-	m  map[int]Organization
+	m  map[int]*Organization
 }
 
 // MakeContainer creates new OrgContainer
 func MakeContainer() OrgContainer {
-	return OrgContainer{m: make(map[int]Organization)}
+	return OrgContainer{m: make(map[int]*Organization)}
 }
 
 // Store saves data to map in OrgContainer
-func (o *OrgContainer) Store(key int, org Organization) {
+func (o *OrgContainer) Store(key int, org *Organization) {
 	o.mx.Lock()
 	o.m[key] = org
 	o.mx.Unlock()
 }
 
 // Get returns Organization from OrgContainer by key
-func (o *OrgContainer) Get(key int) Organization {
+func (o *OrgContainer) Get(key int) *Organization {
 	return o.m[key]
 }
 
@@ -57,7 +57,7 @@ func (o *OrgContainer) Len() int {
 }
 
 // Map returns pointer to map in OrgContainer
-func (o *OrgContainer) Map() *map[int]Organization {
+func (o *OrgContainer) Map() *map[int]*Organization {
 	return &o.m
 }
 

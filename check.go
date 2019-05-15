@@ -20,6 +20,9 @@ func Check(row xlsx.Row, rowNum, line int) {
 	timeout := time.Duration(time.Duration(*timeoutSeconds) * time.Second)
 	client := &http.Client{
 		Timeout: time.Duration(timeout),
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
 
 	// Check if multiple sites in one row
@@ -56,7 +59,7 @@ func Check(row xlsx.Row, rowNum, line int) {
 	} else {
 		newOrg.Bitrix = "Не открывается"
 	}
-	org.Store(rowNum, *newOrg)
+	org.Store(rowNum, newOrg)
 	checked++
 	complete++
 	active--

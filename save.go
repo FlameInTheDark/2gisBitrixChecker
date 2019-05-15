@@ -53,18 +53,24 @@ func SaveToCsv(csvData *[][]string, filePath string) error {
 			return writeErr
 		}
 	}
-	_=file.Close()
+	_ = file.Close()
 	return nil
 }
 
+// ReturnableCompany contains company data
 type ReturnableCompany struct {
 	ID    string `json:"ID"`
 	Sites []struct {
 		Value     string `json:"VALUE"`
 		ValueType string `json:"VALUE_TYPE"`
 	} `json:"WEB"`
+	Phones []struct {
+		Value     string `json:"VALUE"`
+		ValueType string `json:"VALUE_TYPE"`
+	} `json:"PHONE"`
 }
 
+// ReturnResultList contains slice of companies and next offset
 type ReturnResultList struct {
 	Result []ReturnableCompany `json:"result"`
 	Next   int                 `json:"next"`
@@ -92,8 +98,16 @@ func SaveCRM() {
 	for _, v := range *org.Map() {
 		// Checking companies and creating new if company not exists
 		if _, ok := results[trimDomain(v.Site)]; !ok && v.ToSave {
-			CreateCompany(&v)
-			created++
+			var isPhoneExists = false
+			for _,p := range results[trimDomain(v.Site)].Phones {
+				if trimPhone(p.Value) == trimPhone(v.Phone) {
+					isPhoneExists = true
+				}
+			}
+			if !isPhoneExists {
+				CreateCompany(v)
+				created++
+			}
 		}
 	}
 	for active > 0 {
@@ -115,13 +129,23 @@ func GetCompanies(next int) ReturnResultList {
 	}{}
 
 	request.Order.DateCreate = "ASC"
-	request.Select = []string{"WEB"}
+	request.Select = []string{"WEB", "PHONE"}
 	request.Start = next
 
 	rf, _ := json.Marshal(request)
 	rb := bytes.NewReader(rf)
-	resp, _ := http.Post(fmt.Sprintf("%v/crm.company.list", bxConn), "application/json", rb)
-	b, _ := ioutil.ReadAll(resp.Body)
+	resp, rErr := http.Post(fmt.Sprintf("%v/crm.company.list", bxConn), "application/json", rb)
+	if rErr != nil {
+		result.Next = next
+		fmt.Println(rErr.Error())
+		return result
+	}
+	b, bErr := ioutil.ReadAll(resp.Body)
+	if bErr != nil {
+		result.Next = next
+		fmt.Println(bErr.Error())
+		return result
+	}
 	_ = json.Unmarshal(b, &result)
 	return result
 }
@@ -133,8 +157,10 @@ func CreateCompany(org *Organization) {
 	var sites []Site
 	var emails []Email
 
+	// getting phones, emails and sites
 	orgPhones := strings.Split(org.Phone, ",")
 	orgEmails := strings.Split(org.Email, ",")
+	orgSites := strings.Split(org.Site, ",")
 
 	for _, v := range orgPhones {
 		phones = append(phones, Phone{trimPhone(v), "WORK"})
@@ -142,8 +168,6 @@ func CreateCompany(org *Organization) {
 	for _, v := range orgEmails {
 		emails = append(emails, Email{v, "WORK"})
 	}
-
-	orgSites := strings.Split(org.Site, ",")
 
 	for _, v := range orgSites {
 		sites = append(sites, Site{v, "WORK"})
