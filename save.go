@@ -68,6 +68,10 @@ type ReturnableCompany struct {
 		Value     string `json:"VALUE"`
 		ValueType string `json:"VALUE_TYPE"`
 	} `json:"PHONE"`
+	Emails []struct {
+		Value     string `json:"VALUE"`
+		ValueType string `json:"VALUE_TYPE"`
+	}
 }
 
 // ReturnResultList contains slice of companies and next offset
@@ -79,32 +83,59 @@ type ReturnResultList struct {
 // SaveCRM saves checked data in CRM
 func SaveCRM() {
 	var results = make(map[string]ReturnableCompany)
+	var resultsDomains = make(map[string]string)
+	var resultsMails = make(map[string]string)
+	var resultsPhones = make(map[string]string)
+
 	// Getting companies from CRM
 	v := GetCompanies(0)
 	for _, val := range v.Result {
 		if len(val.Sites) != 0 {
-			results[trimDomain(val.Sites[0].Value)] = val
+			results[val.ID] = val
+		}
+		for _, vs := range val.Sites {
+			resultsDomains[trimDomain(vs.Value)] = val.ID
+		}
+		for _, ve := range val.Emails {
+			resultsMails[ve.Value] = val.ID
+		}
+		for _, vp := range val.Phones {
+			resultsPhones[trimPhone(vp.Value)] = val.ID
 		}
 	}
 	for v.Next != 0 {
 		for _, val := range v.Result {
 			if len(val.Sites) != 0 {
-				results[trimDomain(val.Sites[0].Value)] = val
+				results[val.ID] = val
+			}
+			for _, vs := range val.Sites {
+				resultsDomains[trimDomain(vs.Value)] = val.ID
+			}
+			for _, ve := range val.Emails {
+				resultsMails[ve.Value] = val.ID
+			}
+			for _, vp := range val.Phones {
+				resultsPhones[trimPhone(vp.Value)] = val.ID
 			}
 		}
 		v = GetCompanies(v.Next)
 	}
 	created := 0
-	for _, v := range *org.Map() {
+	for id, v := range *org.Map() {
 		// Checking companies and creating new if company not exists
-		if _, ok := results[trimDomain(v.Site)]; !ok && v.ToSave {
-			var isPhoneExists = false
-			for _,p := range results[trimDomain(v.Site)].Phones {
-				if trimPhone(p.Value) == trimPhone(v.Phone) {
-					isPhoneExists = true
-				}
+		if v.ToSave {
+			var isExists = false
+			if _, ok := resultsDomains[trimDomain(v.Site)]; ok {
+				isExists = true
+				UpdateCompany(org.Get(id), results[resultsDomains[trimDomain(v.Site)]])
+			} else if _, ok := resultsMails[v.Email]; ok {
+				isExists = true
+				UpdateCompany(org.Get(id), results[resultsMails[v.Email]])
+			} else if _, ok := resultsPhones[trimPhone(v.Phone)]; ok {
+				isExists = true
+				UpdateCompany(org.Get(id), results[resultsPhones[trimPhone(v.Phone)]])
 			}
-			if !isPhoneExists {
+			if !isExists {
 				CreateCompany(v)
 				created++
 			}
@@ -113,7 +144,7 @@ func SaveCRM() {
 	for active > 0 {
 		time.Sleep(1 * time.Second)
 	}
-	fmt.Printf("Created companies: %v\n", created)
+	fmt.Printf("Created companies: %d\n", created)
 }
 
 // GetCompanies get's offset and returns 50 companies from CRM
@@ -129,12 +160,12 @@ func GetCompanies(next int) ReturnResultList {
 	}{}
 
 	request.Order.DateCreate = "ASC"
-	request.Select = []string{"WEB", "PHONE"}
+	request.Select = []string{"WEB", "PHONE", "EMAIL"}
 	request.Start = next
 
 	rf, _ := json.Marshal(request)
 	rb := bytes.NewReader(rf)
-	resp, rErr := http.Post(fmt.Sprintf("%v/crm.company.list", bxConn), "application/json", rb)
+	resp, rErr := http.Post(fmt.Sprintf("%s/crm.company.list", bxConn), "application/json", rb)
 	if rErr != nil {
 		result.Next = next
 		fmt.Println(rErr.Error())
@@ -176,8 +207,10 @@ func CreateCompany(org *Organization) {
 	// TODO: change to existing ids
 	var license = make(map[string]string)
 	var bxtype = make(map[string]string)
+	// License ID
 	license["bitrix"] = "485"
 	license["sale"] = "487"
+	// Bitrix type ID
 	bxtype["bitrix"] = "507"
 	bxtype["sale"] = "511"
 
@@ -199,6 +232,53 @@ func CreateCompany(org *Organization) {
 
 	r := bytes.NewReader(f)
 
-	_, _ = http.Post(fmt.Sprintf("%v/crm.company.add", bxConn), "application/json", r)
+	_, _ = http.Post(fmt.Sprintf("%s/crm.company.add", bxConn), "application/json", r)
+	active--
+}
+
+func UpdateCompany(org *Organization, company ReturnableCompany) {
+	active++
+	var phones []Phone
+	var sites []Site
+	var emails []Email
+
+	// getting phones, emails and sites
+	orgPhones := strings.Split(org.Phone, ",")
+	orgEmails := strings.Split(org.Email, ",")
+	orgSites := strings.Split(org.Site, ",")
+
+	for _, v := range company.Phones {
+		phones = append(phones, Phone{v.Value, v.ValueType})
+	}
+	for _, v := range company.Emails {
+		emails = append(emails, Email{v.Value, v.ValueType})
+	}
+	for _, v := range company.Sites {
+		sites = append(sites, Site{v.Value, v.ValueType})
+	}
+
+	for _, v := range orgPhones {
+		phones = append(phones, Phone{trimPhone(v), "WORK"})
+	}
+	for _, v := range orgEmails {
+		emails = append(emails, Email{v, "WORK"})
+	}
+
+	for _, v := range orgSites {
+		sites = append(sites, Site{v, "WORK"})
+	}
+
+	// Company fields for request
+	newFields := CompanyUpdate{
+		phones,
+		sites,
+		emails,
+	}
+
+	f, _ := json.Marshal(FieldsUpdate{company.ID, newFields})
+
+	r := bytes.NewReader(f)
+
+	_, _ = http.Post(fmt.Sprintf("%s/crm.company.update", bxConn), "application/json", r)
 	active--
 }

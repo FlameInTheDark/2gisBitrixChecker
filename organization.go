@@ -74,6 +74,12 @@ type Company struct {
 	License      []string `json:"UF_CRM_1551766310"`
 }
 
+type CompanyUpdate struct {
+	Phone  []Phone `json:"PHONE"`
+	Site   []Site  `json:"WEB"`
+	Emails []Email `json:"EMAIL"`
+}
+
 type Phone struct {
 	Value     string `json:"VALUE"`
 	ValueType string `json:"VALUE_TYPE"`
@@ -91,4 +97,9 @@ type Email struct {
 
 type Fields struct {
 	Fields Company `json:"fields"`
+}
+
+type FieldsUpdate struct {
+	Id     string        `json:"id"`
+	Fields CompanyUpdate `json:"fields"`
 }

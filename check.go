@@ -31,13 +31,25 @@ func Check(row xlsx.Row, rowNum, line int) {
 		newOrg.Site = strings.Replace(siteArr[0], " ", "", -1)
 	}
 
-	resp, err := client.Get(fmt.Sprintf("http://%v/bitrix/themes/.default/modules.css", newOrg.Site))
-	if err == nil {
+	resp, errGet1 := client.Get(fmt.Sprintf("https://%s/bitrix/themes/.default/modules.css", newOrg.Site))
+	resp2, errGet2 := client.Get(fmt.Sprintf("http://%s/bitrix/themes/.default/modules.css", newOrg.Site))
+	if errGet1 == nil {
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
 			bodyBytes, err2 := ioutil.ReadAll(resp.Body)
 			if err2 == nil {
 				bodyString := string(bodyBytes)
+				if len(bodyString) == 0 {
+					if errGet2 != nil {
+						defer resp2.Body.Close()
+						if resp2.StatusCode == http.StatusOK {
+							body2Bytes, err3 := ioutil.ReadAll(resp2.Body)
+							if err3 == nil {
+								bodyString = string(body2Bytes)
+							}
+						}
+					}
+				}
 				if strings.Contains(bodyString, "sale") {
 					newOrg.Bitrix = "sale"
 					newOrg.ToSave = true
@@ -70,11 +82,11 @@ func Percentage() {
 	fmt.Println("Rows loaded, checking...")
 	sc := 0
 	for complete < count {
-		per := int((float64(complete ) / float64(count)) * 100)
+		per := int((float64(complete) / float64(count)) * 100)
 		for i := 0; i < sc; i++ {
 			fmt.Print("\b")
 		}
-		str := fmt.Sprintf("Complete: %v%% | %v\\%v | Bitrixes: %v   ", per, complete, count, bitrixes)
+		str := fmt.Sprintf("Complete: %d%% | %d\\%d | Bitrixes: %d   ", per, complete, count, bitrixes)
 		sc = len(str)
 		fmt.Print(str)
 		time.Sleep(time.Second)
