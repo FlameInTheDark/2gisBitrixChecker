@@ -25,7 +25,7 @@ var (
 	toCsv          = flag.Bool("csv", false, "save data to .csv")
 	toXlsx         = flag.Bool("xlsx", false, "save data to .xlsx")
 	org            = MakeContainer()
-	bxConn         = os.Getenv("BX_CONN")
+	bxConn         = flag.String("conn", os.Getenv("BX_CONN"), "bitrix webhook connection string")
 )
 
 func main() {
